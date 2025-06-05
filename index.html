@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Orgena Workspace</title>
+  <style>
+    body { background: #222733; color: #eee; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+    .container { max-width: 900px; margin: 40px auto; background: #181a20; border-radius: 10px; box-shadow: 0 0 10px #0007; padding: 32px 36px; }
+    h1, h2 { color: #97c1ff; }
+    pre, textarea { background: #232733; color: #fff; border: none; border-radius: 4px; padding: 10px; font-size: 1em; }
+    textarea { width: 100%; min-height: 150px; font-family: 'Fira Mono', 'Consolas', monospace; margin-bottom: 1em; font-size: 1.08em; }
+    button { background: #3c8dde; color: #fff; border: none; border-radius: 5px; padding: 10px 24px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; }
+    button:hover { background: #2767a6; }
+    #output { background: #1a1d22; color: #9afc9a; border-radius: 4px; padding: 12px; min-height: 2em; white-space: pre-wrap; font-size: 1em; }
+    .step { margin-bottom: 18px; }
+    a { color: #7ea6ff; }
+    hr { border: none; border-bottom: 1px solid #333; margin: 32px 0; }
+  </style>
+</head>
+
+    <form onsubmit="runOrgena(); return false;">
+      <b>Code:</b>
+      <textarea id="code" spellcheck="false">Say "Welcome to Orgena!"
+
+      </textarea><br>
+      <button type="submit">Run Orgena</button>
+    </form>
+    <div id="output"></div>
+    <hr>
+    <div style="font-size:0.95em; color:#aaa;">
+      Orgena is open source! See <a href="https://github.com/HPD666/Orgena" target="_blank">GitHub</a>.
+    </div>
+  </div>
+  <script>
+    // Orgena Interpreter
+    function runOrgena() {
+      const code = document.getElementById('code').value;
+      const lines = code.replace(/\r\n/g, '\n').split('\n');
+      let vars = Object.create(null);
+      let output = '';
+      let functions = {};
+      let pc = 0;
+
+      function evalExpr(expr) {
+        // Support plus, minus, times, divided by, numbers, variables, and strings
+        expr = expr.trim();
+        if (/^".*"$/.test(expr) || /^'.*'$/.test(expr)) return expr.slice(1, -1);
+        expr = expr.replace(/ plus /gi, ' + ')
+                   .replace(/ minus /gi, ' - ')
+                   .replace(/ times /gi, ' * ')
+                   .replace(/ multiplied by /gi, ' * ')
+                   .replace(/ divided by /gi, ' / ')
+                   .replace(/ mod /gi, ' % ');
+        // Replace variable names with their values
+        expr = expr.replace(/\b[a-zA-Z_]\w*\b/g, function(name){
+          if (Object.prototype.hasOwnProperty.call(vars, name)) return vars[name];
+          return name;
+        });
+        try { return eval(expr); }
+        catch { return expr; }
+      }
+
+      function parseCondition(cond) {
+        cond = cond.trim();
+        let m = cond.match(/(.+) is (greater than|less than|equal to|equals|not equal to|not equals) (.+)/i);
+        if (!m) return false;
+        let left = evalExpr(m[1]);
+        let op = m[2].toLowerCase();
+        let right = evalExpr(m[3]);
+        if (op === 'greater than') return left > right;
+        if (op === 'less than') return left < right;
+        if (op === 'equal to' || op === 'equals') return left == right;
+        if (op === 'not equal to' || op === 'not equals') return left != right;
+        return false;
+      }
+
+      function runBlock(start) {
+        let block = [];
+        let indent = lines[start].match(/^(\s*)/)[1].length;
+        let i = start;
+        for (; i < lines.length; i++) {
+          let line = lines[i];
+          if (line.trim().toLowerCase() === 'end') break;
+          if (i !== start && line.match(/^(\s*)/)[1].length <= indent) break;
+          block.push(line.replace(new RegExp(`^ {0,${indent}}`), ''));
+        }
+        return { block, next: i+1 };
+      }
+
+      function execBlock(blockLines, localVars={}) {
+        let oldVars = Object.assign({}, vars);
+        Object.assign(vars, localVars);
+        for (let l = 0; l < blockLines.length; l++) {
+          execLine(blockLines[l]);
+        }
+        vars = oldVars;
+      }
+
+      function execLine(line) {
+        line = line.trim();
+        if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
+        // Say
+        if (/^Say\s+(.+)/i.test(line)) {
+          let expr = line.match(/^Say\s+(.+)/i)[1];
+          output += evalExpr(expr) + '\n';
+        }
+        // Remember variable
+        else if (/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i.test(line)) {
+          let m = line.match(/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i);
+          vars[m[1]] = evalExpr(m[2]);
+        }
+        // If ... else ...
+        else if (/^If\s+(.+?),\s*(.+)\s+else\s+(.+)$/i.test(line)) {
+          let m = line.match(/^If\s+(.+?),\s*(.+)\s+else\s+(.+)$/i);
+          if (parseCondition(m[1])) execLine(m[2]);
+          else execLine(m[3]);
+        }
+        // If ...,
+        else if (/^If\s+(.+?),\s*(.+)$/i.test(line)) {
+          let m = line.match(/^If\s+(.+?),\s*(.+)$/i);
+          if (parseCondition(m[1])) execLine(m[2]);
+        }
+        // Repeat while
+        else if (/^Repeat while\s+(.+?),?$/i.test(line)) {
+          let m = line.match(/^Repeat while\s+(.+?),?$/i);
+          let { block, next } = runBlock(pc);
+          while (parseCondition(m[1])) {
+            execBlock(block);
+          }
+          pc = next - 1;
+        }
+        // Define function
+        else if (/^Define\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_, ]+),?$/i.test(line)) {
+          let m = line.match(/^Define\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_, ]+),?$/i);
+          let fname = m[1], params = m[2].split(',').map(s=>s.trim());
+          let { block, next } = runBlock(pc);
+          functions[fname] = { params, block };
+          pc = next - 1;
+        }
+        // Call function
+        else if (/^Call\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i.test(line)) {
+          let m = line.match(/^Call\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i);
+          let fname = m[1], args = m[2].split(',').map(s=>evalExpr(s.trim()));
+          if (functions[fname]) {
+            let localVars = {};
+            functions[fname].params.forEach((p, i) => localVars[p] = args[i]);
+            execBlock(functions[fname].block, localVars);
+          }
+        }
+        // Set variable (like x is 5)
+        else if (/^([a-zA-Z_]\w*)\s+is\s+(.+)/i.test(line)) {
+          let m = line.match(/^([a-zA-Z_]\w*)\s+is\s+(.+)/i);
+          vars[m[1]] = evalExpr(m[2]);
+        }
+      }
+
+      for (pc = 0; pc < lines.length; pc++) {
+        execLine(lines[pc]);
+      }
+
+      document.getElementById('output').textContent = output || '(no output)';
+    }
+    // Run initially
+    runOrgena();
+  </script>
+</body>
+</html>
