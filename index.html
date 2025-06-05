@@ -20,9 +20,15 @@
 
     <form onsubmit="runOrgena(); return false;">
       <b>Code:</b>
-      <textarea id="code" spellcheck="false">Say "Welcome to Orgena!"
-
-      </textarea><br>
+      <textarea id="autoresize" rows="1" spellcheck="false">Say "Welcome to Orgena!"
+      </textarea>
+<script>
+const textarea = document.getElementById('autoresize');
+textarea.addEventListener('input', function () {
+  this.style.height = 'auto';
+  this.style.height = this.scrollHeight + 'px';
+});
+</script><br>
       <button type="submit">Run Orgena</button>
     </form>
     <div id="output"></div>
@@ -59,14 +65,7 @@
         try { return eval(expr); }
         catch { return expr; }
       }
-      function execLine(line) {
-  line = line.trim();
-  if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
-  // Say
-  if (/^Say\s+(.+)/i.test(line)) { ... }
-  // ... other handlers
 
-}
       function parseCondition(cond) {
         cond = cond.trim();
         let m = cond.match(/(.+) is (greater than|less than|equal to|equals|not equal to|not equals) (.+)/i);
@@ -163,18 +162,8 @@
 
       for (pc = 0; pc < lines.length; pc++) {
         execLine(lines[pc]);
-      }function execLine(line) {
-  line = line.trim();
-  if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
-  // Say
-  if (/^Say\s+(.+)/i.test(line)) { ... }
-  // ... other handlers
+      }
 
-
-  }
-  // ... other handlers
-}
-}
       document.getElementById('output').textContent = output || '(no output)';
     }
     // Run initially
