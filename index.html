@@ -8,11 +8,10 @@
     .container { max-width: 900px; margin: 40px auto; background: #181a20; border-radius: 10px; box-shadow: 0 0 10px #0007; padding: 32px 36px; }
     h1, h2 { color: #97c1ff; }
     pre, textarea { background: #232733; color: #fff; border: none; border-radius: 4px; padding: 10px; font-size: 1em; }
-    textarea { width: 100%; min-height: 200px; font-family: 'Fira Mono', 'Consolas', monospace; margin-bottom: 1em; font-size: 1.08em; }
+    textarea { width: 100%; min-height: 420px; font-family: 'Fira Mono', 'Consolas', monospace; margin-bottom: 1em; font-size: 1.08em; }
     button { background: #3c8dde; color: #fff; border: none; border-radius: 5px; padding: 10px 24px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; }
     button:hover { background: #2767a6; }
     #output { background: #1a1d22; color: #9afc9a; border-radius: 4px; padding: 12px; min-height: 2em; white-space: pre-wrap; font-size: 1em; }
-    .step { margin-bottom: 18px; }
     a { color: #7ea6ff; }
     hr { border: none; border-bottom: 1px solid #333; margin: 32px 0; }
     #promptInput { display: none; }
@@ -23,7 +22,9 @@
     <h1>Orgena Workspace</h1>
     <form onsubmit="runOrgena(); return false;">
       <b>Code:</b>
-      <textarea id="code" spellcheck="false">Say "Hello World!"
+      <textarea id="code" spellcheck="false">Say "Hello, Orgena!"
+Add "test" to items
+Show items
       </textarea><br>
       <button type="submit">Run Orgena</button>
     </form>
@@ -31,11 +32,10 @@
     <div id="output"></div>
     <hr>
     <div style="font-size:0.95em; color:#aaa;">
-      Orgena is open source! See <a href="https://github.com/HPD666/Orgena" target="_blank">GitHub</a>.
+      Orgena is open source! See <a href="https://github.com/HPD666/Orgena-Web" target="_blank">GitHub</a>.
     </div>
   </div>
   <script>
-    // Orgena Interpreter with 10 abilities!
     function runOrgena() {
       const code = document.getElementById('code').value;
       const lines = code.replace(/\r\n/g, '\n').split('\n');
@@ -47,21 +47,30 @@
       let inputVarName = '';
       let inputCallback = null;
 
-      // Helper for math functions and special phrases
       function evalExpr(expr) {
         expr = expr.trim();
-        // Math functions
+
         if (/^sqrt of (.+)$/i.test(expr)) return Math.sqrt(evalExpr(expr.match(/^sqrt of (.+)$/i)[1]));
         if (/^abs of (.+)$/i.test(expr)) return Math.abs(evalExpr(expr.match(/^abs of (.+)$/i)[1]));
         if (/^Random between (.+) and (.+)$/i.test(expr)) {
           let m = expr.match(/^Random between (.+) and (.+)$/i);
-          let min = parseInt(evalExpr(m[1])), max = parseInt(evalExpr(m[2]));
+          let min = parseFloat(evalExpr(m[1])), max = parseFloat(evalExpr(m[2]));
           return Math.floor(Math.random() * (max - min + 1)) + min;
         }
+        if (/^floor (.+)$/i.test(expr)) return Math.floor(evalExpr(expr.match(/^floor (.+)$/i)[1]));
+        if (/^ceil (.+)$/i.test(expr)) return Math.ceil(evalExpr(expr.match(/^ceil (.+)$/i)[1]));
+        if (/^round (.+)$/i.test(expr)) return Math.round(evalExpr(expr.match(/^round (.+)$/i)[1]));
+        if (/^power (.+) (.+)$/i.test(expr)) { let m=expr.match(/^power (.+) (.+)$/i); return Math.pow(evalExpr(m[1]),evalExpr(m[2])); }
+        if (/^modulo (.+) (.+)$/i.test(expr)) { let m=expr.match(/^modulo (.+) (.+)$/i); return evalExpr(m[1])%evalExpr(m[2]); }
+        if (/^log (.+)$/i.test(expr)) return Math.log10(evalExpr(expr.match(/^log (.+)$/i)[1]));
+        if (/^exp (.+)$/i.test(expr)) return Math.exp(evalExpr(expr.match(/^exp (.+)$/i)[1]));
+        if (/^sin (.+)$/i.test(expr)) return Math.sin(evalExpr(expr.match(/^sin (.+)$/i)[1]));
+        if (/^cos (.+)$/i.test(expr)) return Math.cos(evalExpr(expr.match(/^cos (.+)$/i)[1]));
+        if (/^tan (.+)$/i.test(expr)) return Math.tan(evalExpr(expr.match(/^tan (.+)$/i)[1]));
+        if (/^Now$/i.test(expr)) return new Date().toLocaleString();
         if (/^current time$/i.test(expr)) return new Date().toLocaleTimeString();
         if (/^current date$/i.test(expr)) return new Date().toLocaleDateString();
 
-        // List index access: things at 2
         if (/^([a-zA-Z_]\w*) at (\d+)$/i.test(expr)) {
           let m = expr.match(/^([a-zA-Z_]\w*) at (\d+)$/i);
           let arr = vars[m[1]];
@@ -69,16 +78,46 @@
           if (Array.isArray(arr) && idx >= 0 && idx < arr.length) return arr[idx];
           else return '';
         }
-
-        // Support plus, minus, times, divided by, variables, and strings
-        if (/^".*"$/.test(expr) || /^'.*'$/.test(expr)) return expr.slice(1, -1);
+        if (/^Uppercase (.+)$/i.test(expr)) { let s=evalExpr(expr.match(/^Uppercase (.+)$/i)[1]); return String(s).toUpperCase();}
+        if (/^Lowercase (.+)$/i.test(expr)) { let s=evalExpr(expr.match(/^Lowercase (.+)$/i)[1]); return String(s).toLowerCase();}
+        if (/^Substring (.+) from (\d+) to (\d+)$/i.test(expr)) {
+          let m=expr.match(/^Substring (.+) from (\d+) to (\d+)$/i);
+          let s=evalExpr(m[1]), a=parseInt(m[2])-1, b=parseInt(m[3]);
+          return String(s).substring(a,b);
+        }
+        if (/^Contains (.+) in (.+)$/i.test(expr)) {
+          let m=expr.match(/^Contains (.+) in (.+)$/i); let a=evalExpr(m[1]), b=evalExpr(m[2]);
+          return String(b).includes(String(a));
+        }
+        if (/^Repeat (.+) (\d+) times$/i.test(expr)) {
+          let m=expr.match(/^Repeat (.+) (\d+) times$/i); let s=evalExpr(m[1]), n=parseInt(m[2]);
+          return String(s).repeat(n);
+        }
+        if (/^Trim (.+)$/i.test(expr)) { let s=evalExpr(expr.match(/^Trim (.+)$/i)[1]); return String(s).trim();}
+        if (/^Pad (.+) to (\d+) with (.+)$/i.test(expr)) {
+          let m=expr.match(/^Pad (.+) to (\d+) with (.+)$/i); let s=evalExpr(m[1]), n=parseInt(m[2]), chr=evalExpr(m[3]);
+          return String(s).padStart(n,chr);
+        }
+        if (/^Starts with (.+) in (.+)$/i.test(expr)) {
+          let m=expr.match(/^Starts with (.+) in (.+)$/i); let a=evalExpr(m[1]), b=evalExpr(m[2]);
+          return String(b).startsWith(String(a));
+        }
+        if (/^Ends with (.+) in (.+)$/i.test(expr)) {
+          let m=expr.match(/^Ends with (.+) in (.+)$/i); let a=evalExpr(m[1]), b=evalExpr(m[2]);
+          return String(b).endsWith(String(a));
+        }
+        if (/^Random choice from ([a-zA-Z_]\w*)$/i.test(expr)) {
+          let m = expr.match(/^Random choice from ([a-zA-Z_]\w*)$/i);
+          let arr = vars[m[1]];
+          if (Array.isArray(arr) && arr.length>0) return arr[Math.floor(Math.random()*arr.length)];
+          return "";
+        }
         expr = expr.replace(/ plus /gi, ' + ')
                    .replace(/ minus /gi, ' - ')
                    .replace(/ times /gi, ' * ')
                    .replace(/ multiplied by /gi, ' * ')
                    .replace(/ divided by /gi, ' / ')
                    .replace(/ mod /gi, ' % ');
-        // Replace variable names with their values
         expr = expr.replace(/\b[a-zA-Z_]\w*\b/g, function(name){
           if (Object.prototype.hasOwnProperty.call(vars, name)) return vars[name];
           return name;
@@ -125,31 +164,25 @@
 
       function execLine(line) {
         line = line.trim();
-        // 10. Comments
         if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
 
-        // 1. Say
         if (/^Say\s+(.+)/i.test(line)) {
           let expr = line.match(/^Say\s+(.+)/i)[1];
           output += evalExpr(expr) + '\n';
         }
-        // 2. Remember variable
         else if (/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i.test(line)) {
           let m = line.match(/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i);
           vars[m[1]] = evalExpr(m[2]);
         }
-        // 3. If ... else ...
         else if (/^If\s+(.+?),\s*(.+)\s+else\s+(.+)$/i.test(line)) {
           let m = line.match(/^If\s+(.+?),\s*(.+)\s+else\s+(.+)$/i);
           if (parseCondition(m[1])) execLine(m[2]);
           else execLine(m[3]);
         }
-        // 4. If ...
         else if (/^If\s+(.+?),\s*(.+)$/i.test(line)) {
           let m = line.match(/^If\s+(.+?),\s*(.+)$/i);
           if (parseCondition(m[1])) execLine(m[2]);
         }
-        // 5. Repeat while
         else if (/^Repeat while\s+(.+?),?$/i.test(line)) {
           let m = line.match(/^Repeat while\s+(.+?),?$/i);
           let { block, next } = runBlock(pc);
@@ -158,7 +191,6 @@
           }
           pc = next - 1;
         }
-        // 6. Define function
         else if (/^Define\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_, ]+),?$/i.test(line)) {
           let m = line.match(/^Define\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_, ]+),?$/i);
           let fname = m[1], params = m[2].split(',').map(s=>s.trim());
@@ -166,7 +198,6 @@
           functions[fname] = { params, block };
           pc = next - 1;
         }
-        // 7. Call function
         else if (/^Call\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i.test(line)) {
           let m = line.match(/^Call\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i);
           let fname = m[1], args = m[2].split(',').map(s=>evalExpr(s.trim()));
@@ -176,12 +207,10 @@
             execBlock(functions[fname].block, localVars);
           }
         }
-        // 8. Set variable
         else if (/^([a-zA-Z_]\w*)\s+is\s+(.+)/i.test(line)) {
           let m = line.match(/^([a-zA-Z_]\w*)\s+is\s+(.+)/i);
           vars[m[1]] = evalExpr(m[2]);
         }
-        // 1. Add to list
         else if (/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i);
           let value = evalExpr(m[1]);
@@ -189,7 +218,14 @@
           if (!Array.isArray(vars[listName])) vars[listName] = [];
           vars[listName].push(value);
         }
-        // 2. Show list
+        else if (/^Remove\s+(.+)\s+from\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Remove\s+(.+)\s+from\s+([a-zA-Z_]\w*)$/i);
+          let value = evalExpr(m[1]);
+          let listName = m[2];
+          if (Array.isArray(vars[listName])) {
+            vars[listName] = vars[listName].filter(item => item != value);
+          }
+        }
         else if (/^Show\s+([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Show\s+([a-zA-Z_]\w*)$/i);
           let listName = m[1];
@@ -199,26 +235,13 @@
             output += listName + ' is not a list\n';
           }
         }
-        // 3. Hide list (optional, does nothing)
         else if (/^Hide\s+([a-zA-Z_]\w*)$/i.test(line)) {
-          // No operation
         }
-        // 1. Remove from list
-        else if (/^Remove\s+(.+)\s+from\s+([a-zA-Z_]\w*)$/i.test(line)) {
-          let m = line.match(/^Remove\s+(.+)\s+from\s+([a-zA-Z_]\w*)$/i);
-          let value = evalExpr(m[1]);
-          let listName = m[2];
-          if (Array.isArray(vars[listName])) {
-            vars[listName] = vars[listName].filter(item => item != value);
-          }
-        }
-        // 2. Clear list
         else if (/^Clear\s+([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Clear\s+([a-zA-Z_]\w*)$/i);
           let listName = m[1];
           if (Array.isArray(vars[listName])) vars[listName] = [];
         }
-        // 3. Count list
         else if (/^Count\s+([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Count\s+([a-zA-Z_]\w*)$/i);
           let listName = m[1];
@@ -228,7 +251,6 @@
             output += listName + ' is not a list\n';
           }
         }
-        // 4. For each loop
         else if (/^For each\s+([a-zA-Z_]\w*)\s+in\s+([a-zA-Z_]\w*),?$/i.test(line)) {
           let m = line.match(/^For each\s+([a-zA-Z_]\w*)\s+in\s+([a-zA-Z_]\w*),?$/i);
           let itemVar = m[1], listName = m[2];
@@ -242,7 +264,95 @@
           }
           pc = next - 1;
         }
-        // 5. Ask for user input
+        else if (/^Join\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i.test(line)) {
+          let m = line.match(/^Join\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i);
+          let listName = m[1], sep = evalExpr(m[2]);
+          if (Array.isArray(vars[listName])) {
+            vars[listName+"_joined"] = vars[listName].join(sep);
+          }
+        }
+        else if (/^Concat\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Concat\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_]\w*)$/i);
+          let a = m[1], b = m[2];
+          if (Array.isArray(vars[a]) && Array.isArray(vars[b])) {
+            vars[a] = vars[a].concat(vars[b]);
+          }
+        }
+        else if (/^Unique\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Unique\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            vars[listName] = [...new Set(vars[listName])];
+          }
+        }
+        else if (/^Reverse\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Reverse\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            vars[listName].reverse();
+          }
+        }
+        else if (/^Sort\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Sort\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            vars[listName].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+          }
+        }
+        else if (/^Slice\s+([a-zA-Z_]\w*)\s+from\s+(\d+)\s+to\s+(\d+)$/i.test(line)) {
+          let m = line.match(/^Slice\s+([a-zA-Z_]\w*)\s+from\s+(\d+)\s+to\s+(\d+)$/i);
+          let listName = m[1], a = parseInt(m[2])-1, b = parseInt(m[3]);
+          if (Array.isArray(vars[listName])) {
+            vars[listName+"_sliced"] = vars[listName].slice(a, b);
+          }
+        }
+        else if (/^Replace\s+(.+)\s+with\s+(.+)\s+in\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Replace\s+(.+)\s+with\s+(.+)\s+in\s+([a-zA-Z_]\w*)$/i);
+          let old = evalExpr(m[1]), val = evalExpr(m[2]), listName = m[3];
+          if (Array.isArray(vars[listName])) {
+            vars[listName] = vars[listName].map(x => x==old?val:x);
+          }
+        }
+        else if (/^Sum\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Sum\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            vars.sum_result = vars[listName].map(Number).reduce((a,b)=>a+b,0);
+          }
+        }
+        else if (/^Product\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Product\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            vars.product_result = vars[listName].map(Number).reduce((a,b)=>a*b,1);
+          }
+        }
+        else if (/^Min\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Min\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            vars.min_result = Math.min(...vars[listName]);
+          }
+        }
+        else if (/^Max\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Max\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            vars.max_result = Math.max(...vars[listName]);
+          }
+        }
+        else if (/^Index of (.+) in ([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Index of (.+) in ([a-zA-Z_]\w*)$/i);
+          let val = evalExpr(m[1]), listName = m[2];
+          if (Array.isArray(vars[listName])) {
+            vars.index_result = vars[listName].indexOf(val)+1;
+          }
+        }
+        else if (/^Length of ([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Length of ([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) vars.length_result = vars[listName].length;
+        }
         else if (/^Ask for ([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Ask for ([a-zA-Z_]\w*)$/i);
           awaitingInput = true;
@@ -257,7 +367,6 @@
         }
       }
 
-      // Interpreter runner with pause/resume support for input
       function runInterpreter(startAt) {
         document.getElementById('output').textContent = '';
         output = '';
@@ -271,7 +380,6 @@
         document.getElementById('output').textContent = output || '(no output)';
       }
 
-      // Input prompt handling for "Ask for"
       function showPromptInput() {
         let input = document.getElementById('promptInput');
         input.style.display = 'block';
@@ -285,11 +393,8 @@
           }
         };
       }
-
-      // Start interpreter
       runInterpreter(0);
     }
-    // Run initially
     runOrgena();
   </script>
 </body>
