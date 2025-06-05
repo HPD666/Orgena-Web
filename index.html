@@ -59,7 +59,37 @@
         try { return eval(expr); }
         catch { return expr; }
       }
+      function execLine(line) {
+  line = line.trim();
+  if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
+  // Say
+  if (/^Say\s+(.+)/i.test(line)) { ... }
+  // ... other handlers
 
+  // Add to list
+  else if (/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i.test(line)) {
+    let m = line.match(/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i);
+    let value = evalExpr(m[1]);
+    let listName = m[2];
+    if (!Array.isArray(vars[listName])) vars[listName] = [];
+    vars[listName].push(value);
+  }
+  // Show list
+  else if (/^Show\s+([a-zA-Z_]\w*)$/i.test(line)) {
+    let m = line.match(/^Show\s+([a-zA-Z_]\w*)$/i);
+    let listName = m[1];
+    if (Array.isArray(vars[listName])) {
+      output += listName + ': ' + vars[listName].join(', ') + '\n';
+    } else {
+      output += listName + ' is not a list\n';
+    }
+  }
+  // Hide list (optional, does nothing)
+  else if (/^Hide\s+([a-zA-Z_]\w*)$/i.test(line)) {
+    // No operation
+  }
+  // ... other handlers
+}
       function parseCondition(cond) {
         cond = cond.trim();
         let m = cond.match(/(.+) is (greater than|less than|equal to|equals|not equal to|not equals) (.+)/i);
@@ -163,27 +193,7 @@
   if (/^Say\s+(.+)/i.test(line)) { ... }
   // ... other handlers
 
-  // Add to list
-  else if (/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i.test(line)) {
-    let m = line.match(/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i);
-    let value = evalExpr(m[1]);
-    let listName = m[2];
-    if (!Array.isArray(vars[listName])) vars[listName] = [];
-    vars[listName].push(value);
-  }
-  // Show list
-  else if (/^Show\s+([a-zA-Z_]\w*)$/i.test(line)) {
-    let m = line.match(/^Show\s+([a-zA-Z_]\w*)$/i);
-    let listName = m[1];
-    if (Array.isArray(vars[listName])) {
-      output += listName + ': ' + vars[listName].join(', ') + '\n';
-    } else {
-      output += listName + ' is not a list\n';
-    }
-  }
-  // Hide list (optional, does nothing)
-  else if (/^Hide\s+([a-zA-Z_]\w*)$/i.test(line)) {
-    // No operation
+
   }
   // ... other handlers
 }
