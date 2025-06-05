@@ -159,25 +159,8 @@ textarea.addEventListener('input', function () {
           vars[m[1]] = evalExpr(m[2]);
         }
       }
-      // Create list
-else if (/^Create list\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i.test(line)) {
-  let m = line.match(/^Create list\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i);
-  vars[m[1]] = m[2].split(',').map(s=>evalExpr(s.trim()));
-}
-// Show list
-else if (/^Show list\s+([a-zA-Z_]\w*)$/i.test(line)) {
-  let m = line.match(/^Show list\s+([a-zA-Z_]\w*)$/i);
-  if (Array.isArray(vars[m[1]])) output += vars[m[1]].join(', ') + '\n';
-  else output += '(not a list)\n';
-}
-  // Hide list
-else if (/^Hide list\s+([a-zA-Z_]\w*)$/i.test(line)) {
-  let m = line.match(/^Hide list\s+([a-zA-Z_]\w*)$/i);
-  if (Array.isArray(vars[m[1]])) output += '[list hidden]\n';
-  else output += '(not a list)\n';
-}
 
-      for (pc = 0; pc < lines.length; pc++) {
+       for (pc = 0; pc < lines.length; pc++) {
         execLine(lines[pc]);
       }
 
