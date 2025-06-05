@@ -15,6 +15,7 @@
     a { color: #7ea6ff; }
     hr { border: none; border-bottom: 1px solid #333; margin: 32px 0; }
     #promptInput { display: none; }
+    #orgenaElements { margin-top: 24px; }
   </style>
 </head>
 <body>
@@ -22,14 +23,20 @@
     <h1>Orgena Workspace</h1>
     <form onsubmit="runOrgena(); return false;">
       <b>Code:</b>
-      <textarea id="code" spellcheck="false">Say "Hello, Orgena!"
-Add "test" to items
-Show items
+      <textarea id="code" spellcheck="false">
+// Try Orgena's new HTML features!
+Create Element button as myBtn
+Set text of myBtn to "Say Hello!"
+Add myBtn to page
+On click of myBtn, run
+  Say "Hello from Orgena and HTML!"
+end
       </textarea><br>
       <button type="submit">Run Orgena</button>
     </form>
     <input id="promptInput" type="text" placeholder="Type your answer and press Enter...">
     <div id="output"></div>
+    <div id="orgenaElements"></div>
     <hr>
     <div style="font-size:0.95em; color:#aaa;">
       Orgena is open source! See <a href="https://github.com/HPD666/Orgena-Web" target="_blank">GitHub</a>.
@@ -46,10 +53,15 @@ Show items
       let awaitingInput = false;
       let inputVarName = '';
       let inputCallback = null;
+      let orgenaElements = Object.create(null); // For HTML elements
+      let eventBlocks = []; // For storing event handlers
+
+      // Clear previous Orgena-created HTML
+      document.getElementById('orgenaElements').innerHTML = '';
 
       function evalExpr(expr) {
         expr = expr.trim();
-
+        if (/^"([^"]*)"$/i.test(expr)) return expr.replace(/^"|"$/g, "");
         if (/^sqrt of (.+)$/i.test(expr)) return Math.sqrt(evalExpr(expr.match(/^sqrt of (.+)$/i)[1]));
         if (/^abs of (.+)$/i.test(expr)) return Math.abs(evalExpr(expr.match(/^abs of (.+)$/i)[1]));
         if (/^Random between (.+) and (.+)$/i.test(expr)) {
@@ -70,7 +82,6 @@ Show items
         if (/^Now$/i.test(expr)) return new Date().toLocaleString();
         if (/^current time$/i.test(expr)) return new Date().toLocaleTimeString();
         if (/^current date$/i.test(expr)) return new Date().toLocaleDateString();
-
         if (/^([a-zA-Z_]\w*) at (\d+)$/i.test(expr)) {
           let m = expr.match(/^([a-zA-Z_]\w*) at (\d+)$/i);
           let arr = vars[m[1]];
@@ -166,6 +177,92 @@ Show items
         line = line.trim();
         if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
 
+        // --- HTML Extension Start ---
+
+        // Create Element <type> as <name>
+        if (/^Create Element ([a-zA-Z0-9]+) as ([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Create Element ([a-zA-Z0-9]+) as ([a-zA-Z_]\w*)$/i);
+          let tag = m[1], name = m[2];
+          let el = document.createElement(tag);
+          el.style.margin = "6px";
+          orgenaElements[name] = el;
+          return;
+        }
+
+        // Set text of <name> to <value>
+        if (/^Set text of ([a-zA-Z_]\w*) to (.+)$/i.test(line)) {
+          let m = line.match(/^Set text of ([a-zA-Z_]\w*) to (.+)$/i);
+          let name = m[1], val = evalExpr(m[2]);
+          if (orgenaElements[name]) orgenaElements[name].textContent = val;
+          return;
+        }
+
+        // Set attribute <attr> of <name> to <value>
+        if (/^Set attribute ([a-zA-Z0-9\-_]+) of ([a-zA-Z_]\w*) to (.+)$/i.test(line)) {
+          let m = line.match(/^Set attribute ([a-zA-Z0-9\-_]+) of ([a-zA-Z_]\w*) to (.+)$/i);
+          let attr = m[1], name = m[2], val = evalExpr(m[3]);
+          if (orgenaElements[name]) orgenaElements[name].setAttribute(attr, val);
+          return;
+        }
+
+        // Set style of <name> to <css>
+        if (/^Set style of ([a-zA-Z_]\w*) to (.+)$/i.test(line)) {
+          let m = line.match(/^Set style of ([a-zA-Z_]\w*) to (.+)$/i);
+          let name = m[1], css = evalExpr(m[2]);
+          if (orgenaElements[name]) orgenaElements[name].style.cssText += ";" + css;
+          return;
+        }
+
+        // Add <name> to page
+        if (/^Add ([a-zA-Z_]\w*) to page$/i.test(line)) {
+          let m = line.match(/^Add ([a-zA-Z_]\w*) to page$/i);
+          let name = m[1];
+          if (orgenaElements[name]) document.getElementById('orgenaElements').appendChild(orgenaElements[name]);
+          return;
+        }
+
+        // Remove <name> from page
+        if (/^Remove ([a-zA-Z_]\w*) from page$/i.test(line)) {
+          let m = line.match(/^Remove ([a-zA-Z_]\w*) from page$/i);
+          let name = m[1];
+          if (orgenaElements[name] && orgenaElements[name].parentElement) orgenaElements[name].parentElement.removeChild(orgenaElements[name]);
+          return;
+        }
+
+        // Show <name>
+        if (/^Show ([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Show ([a-zA-Z_]\w*)$/i);
+          let name = m[1];
+          if (orgenaElements[name]) orgenaElements[name].style.display = '';
+          return;
+        }
+
+        // Hide <name>
+        if (/^Hide ([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Hide ([a-zA-Z_]\w*)$/i);
+          let name = m[1];
+          if (orgenaElements[name]) orgenaElements[name].style.display = 'none';
+          return;
+        }
+
+        // On click of <name>, run ... end
+        if (/^On click of ([a-zA-Z_]\w*), run$/i.test(line)) {
+          let m = line.match(/^On click of ([a-zA-Z_]\w*), run$/i);
+          let name = m[1];
+          let { block, next } = runBlock(pc);
+          if (orgenaElements[name]) {
+            orgenaElements[name].onclick = function() {
+              try { execBlock(block); }
+              catch(e) { if (e !== 'PAUSE_FOR_INPUT') throw e; }
+              document.getElementById('output').textContent = output || '(no output)';
+            }
+          }
+          pc = next - 1;
+          return;
+        }
+
+        // --- HTML Extension End ---
+
         if (/^Say\s+(.+)/i.test(line)) {
           let expr = line.match(/^Say\s+(.+)/i)[1];
           output += evalExpr(expr) + '\n';
@@ -227,15 +324,17 @@ Show items
           }
         }
         else if (/^Show\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          // If not a DOM element, treat as list show (original behavior)
           let m = line.match(/^Show\s+([a-zA-Z_]\w*)$/i);
           let listName = m[1];
           if (Array.isArray(vars[listName])) {
             output += listName + ': ' + vars[listName].join(', ') + '\n';
-          } else {
+          } else if (!orgenaElements[listName]) {
             output += listName + ' is not a list\n';
           }
         }
         else if (/^Hide\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          // If not a DOM element, skip (original behavior)
         }
         else if (/^Clear\s+([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Clear\s+([a-zA-Z_]\w*)$/i);
