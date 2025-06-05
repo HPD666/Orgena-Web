@@ -22,13 +22,9 @@
       <b>Code:</b>
       <textarea id="autoresize" rows="1" spellcheck="false">Say "Welcome to Orgena!"
       </textarea>
-<script>
-const textarea = document.getElementById('autoresize');
-textarea.addEventListener('input', function () {
-  this.style.height = 'auto';
-  this.style.height = this.scrollHeight + 'px';
-});
-</script><br>
+      <textarea id="code" spellcheck="false">Say "Welcome to Orgena!"
+
+      </textarea><br>
       <button type="submit">Run Orgena</button>
     </form>
     <div id="output"></div>
