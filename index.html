@@ -8,13 +8,14 @@
     .container { max-width: 900px; margin: 40px auto; background: #181a20; border-radius: 10px; box-shadow: 0 0 10px #0007; padding: 32px 36px; }
     h1, h2 { color: #97c1ff; }
     pre, textarea { background: #232733; color: #fff; border: none; border-radius: 4px; padding: 10px; font-size: 1em; }
-    textarea { width: 100%; min-height: 150px; font-family: 'Fira Mono', 'Consolas', monospace; margin-bottom: 1em; font-size: 1.08em; }
+    textarea { width: 100%; min-height: 200px; font-family: 'Fira Mono', 'Consolas', monospace; margin-bottom: 1em; font-size: 1.08em; }
     button { background: #3c8dde; color: #fff; border: none; border-radius: 5px; padding: 10px 24px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; }
     button:hover { background: #2767a6; }
     #output { background: #1a1d22; color: #9afc9a; border-radius: 4px; padding: 12px; min-height: 2em; white-space: pre-wrap; font-size: 1em; }
     .step { margin-bottom: 18px; }
     a { color: #7ea6ff; }
     hr { border: none; border-bottom: 1px solid #333; margin: 32px 0; }
+    #promptInput { display: none; }
   </style>
 </head>
 <body>
@@ -23,13 +24,52 @@
     <form onsubmit="runOrgena(); return false;">
       <b>Code:</b>
       <textarea id="code" spellcheck="false">Say "Welcome to Orgena!"
-
+# List abilities test
 Add "apple" to fruits
 Add "banana" to fruits
+Add "orange" to fruits
 Show fruits
+Remove "banana" from fruits
+Show fruits
+Count fruits
+Clear fruits
+Show fruits
+
+# For each loop
+Add "cat" to animals
+Add "dog" to animals
+Add "fox" to animals
+For each pet in animals,
+  Say pet
+End
+
+# Index access
+Add "first" to things
+Add "second" to things
+Say things at 2
+
+# Math functions
+Say sqrt of 25
+Say abs of -10
+
+# Ask for name (try this and enter a name)
+Ask for name
+Say name
+
+# Random number
+Remember x is Random between 5 and 15
+Say x
+
+# Current time
+Say current time
+
+# Comments are ignored
+// This is a comment
+# This is also a comment
       </textarea><br>
       <button type="submit">Run Orgena</button>
     </form>
+    <input id="promptInput" type="text" placeholder="Type your answer and press Enter...">
     <div id="output"></div>
     <hr>
     <div style="font-size:0.95em; color:#aaa;">
@@ -37,7 +77,7 @@ Show fruits
     </div>
   </div>
   <script>
-    // Orgena Interpreter
+    // Orgena Interpreter with 10 abilities!
     function runOrgena() {
       const code = document.getElementById('code').value;
       const lines = code.replace(/\r\n/g, '\n').split('\n');
@@ -45,10 +85,34 @@ Show fruits
       let output = '';
       let functions = {};
       let pc = 0;
+      let awaitingInput = false;
+      let inputVarName = '';
+      let inputCallback = null;
 
+      // Helper for math functions and special phrases
       function evalExpr(expr) {
-        // Support plus, minus, times, divided by, numbers, variables, and strings
         expr = expr.trim();
+        // Math functions
+        if (/^sqrt of (.+)$/i.test(expr)) return Math.sqrt(evalExpr(expr.match(/^sqrt of (.+)$/i)[1]));
+        if (/^abs of (.+)$/i.test(expr)) return Math.abs(evalExpr(expr.match(/^abs of (.+)$/i)[1]));
+        if (/^Random between (.+) and (.+)$/i.test(expr)) {
+          let m = expr.match(/^Random between (.+) and (.+)$/i);
+          let min = parseInt(evalExpr(m[1])), max = parseInt(evalExpr(m[2]));
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        if (/^current time$/i.test(expr)) return new Date().toLocaleTimeString();
+        if (/^current date$/i.test(expr)) return new Date().toLocaleDateString();
+
+        // List index access: things at 2
+        if (/^([a-zA-Z_]\w*) at (\d+)$/i.test(expr)) {
+          let m = expr.match(/^([a-zA-Z_]\w*) at (\d+)$/i);
+          let arr = vars[m[1]];
+          let idx = parseInt(m[2]) - 1;
+          if (Array.isArray(arr) && idx >= 0 && idx < arr.length) return arr[idx];
+          else return '';
+        }
+
+        // Support plus, minus, times, divided by, variables, and strings
         if (/^".*"$/.test(expr) || /^'.*'$/.test(expr)) return expr.slice(1, -1);
         expr = expr.replace(/ plus /gi, ' + ')
                    .replace(/ minus /gi, ' - ')
@@ -103,29 +167,31 @@ Show fruits
 
       function execLine(line) {
         line = line.trim();
+        // 10. Comments
         if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
-        // Say
+
+        // 1. Say
         if (/^Say\s+(.+)/i.test(line)) {
           let expr = line.match(/^Say\s+(.+)/i)[1];
           output += evalExpr(expr) + '\n';
         }
-        // Remember variable
+        // 2. Remember variable
         else if (/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i.test(line)) {
           let m = line.match(/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i);
           vars[m[1]] = evalExpr(m[2]);
         }
-        // If ... else ...
+        // 3. If ... else ...
         else if (/^If\s+(.+?),\s*(.+)\s+else\s+(.+)$/i.test(line)) {
           let m = line.match(/^If\s+(.+?),\s*(.+)\s+else\s+(.+)$/i);
           if (parseCondition(m[1])) execLine(m[2]);
           else execLine(m[3]);
         }
-        // If ...
+        // 4. If ...
         else if (/^If\s+(.+?),\s*(.+)$/i.test(line)) {
           let m = line.match(/^If\s+(.+?),\s*(.+)$/i);
           if (parseCondition(m[1])) execLine(m[2]);
         }
-        // Repeat while
+        // 5. Repeat while
         else if (/^Repeat while\s+(.+?),?$/i.test(line)) {
           let m = line.match(/^Repeat while\s+(.+?),?$/i);
           let { block, next } = runBlock(pc);
@@ -134,7 +200,7 @@ Show fruits
           }
           pc = next - 1;
         }
-        // Define function
+        // 6. Define function
         else if (/^Define\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_, ]+),?$/i.test(line)) {
           let m = line.match(/^Define\s+([a-zA-Z_]\w*)\s+with\s+([a-zA-Z_, ]+),?$/i);
           let fname = m[1], params = m[2].split(',').map(s=>s.trim());
@@ -142,7 +208,7 @@ Show fruits
           functions[fname] = { params, block };
           pc = next - 1;
         }
-        // Call function
+        // 7. Call function
         else if (/^Call\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i.test(line)) {
           let m = line.match(/^Call\s+([a-zA-Z_]\w*)\s+with\s+(.+)$/i);
           let fname = m[1], args = m[2].split(',').map(s=>evalExpr(s.trim()));
@@ -152,12 +218,12 @@ Show fruits
             execBlock(functions[fname].block, localVars);
           }
         }
-        // Set variable (like x is 5)
+        // 8. Set variable
         else if (/^([a-zA-Z_]\w*)\s+is\s+(.+)/i.test(line)) {
           let m = line.match(/^([a-zA-Z_]\w*)\s+is\s+(.+)/i);
           vars[m[1]] = evalExpr(m[2]);
         }
-        // Add to list
+        // 1. Add to list
         else if (/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Add\s+(.+)\s+to\s+([a-zA-Z_]\w*)$/i);
           let value = evalExpr(m[1]);
@@ -165,29 +231,105 @@ Show fruits
           if (!Array.isArray(vars[listName])) vars[listName] = [];
           vars[listName].push(value);
         }
-        // Show list
+        // 2. Show list
         else if (/^Show\s+([a-zA-Z_]\w*)$/i.test(line)) {
           let m = line.match(/^Show\s+([a-zA-Z_]\w*)$/i);
           let listName = m[1];
           if (Array.isArray(vars[listName])) {
             output += listName + ': ' + vars[listName].join(', ') + '\n';
-            // Or use this for one item per line:
-            // output += listName + ':\n' + vars[listName].map(item => '- ' + item).join('\n') + '\n';
           } else {
             output += listName + ' is not a list\n';
           }
         }
-        // Hide list (optional, does nothing)
+        // 3. Hide list (optional, does nothing)
         else if (/^Hide\s+([a-zA-Z_]\w*)$/i.test(line)) {
           // No operation
         }
+        // 1. Remove from list
+        else if (/^Remove\s+(.+)\s+from\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Remove\s+(.+)\s+from\s+([a-zA-Z_]\w*)$/i);
+          let value = evalExpr(m[1]);
+          let listName = m[2];
+          if (Array.isArray(vars[listName])) {
+            vars[listName] = vars[listName].filter(item => item != value);
+          }
+        }
+        // 2. Clear list
+        else if (/^Clear\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Clear\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) vars[listName] = [];
+        }
+        // 3. Count list
+        else if (/^Count\s+([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Count\s+([a-zA-Z_]\w*)$/i);
+          let listName = m[1];
+          if (Array.isArray(vars[listName])) {
+            output += listName + ' count: ' + vars[listName].length + '\n';
+          } else {
+            output += listName + ' is not a list\n';
+          }
+        }
+        // 4. For each loop
+        else if (/^For each\s+([a-zA-Z_]\w*)\s+in\s+([a-zA-Z_]\w*),?$/i.test(line)) {
+          let m = line.match(/^For each\s+([a-zA-Z_]\w*)\s+in\s+([a-zA-Z_]\w*),?$/i);
+          let itemVar = m[1], listName = m[2];
+          let { block, next } = runBlock(pc);
+          if (Array.isArray(vars[listName])) {
+            for (let v of vars[listName]) {
+              let localVars = {};
+              localVars[itemVar] = v;
+              execBlock(block, localVars);
+            }
+          }
+          pc = next - 1;
+        }
+        // 5. Ask for user input
+        else if (/^Ask for ([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Ask for ([a-zA-Z_]\w*)$/i);
+          awaitingInput = true;
+          inputVarName = m[1];
+          inputCallback = function(val) {
+            vars[inputVarName] = val;
+            awaitingInput = false;
+            runInterpreter(pc + 1);
+          };
+          showPromptInput();
+          throw 'PAUSE_FOR_INPUT';
+        }
       }
 
-      for (pc = 0; pc < lines.length; pc++) {
-        execLine(lines[pc]);
+      // Interpreter runner with pause/resume support for input
+      function runInterpreter(startAt) {
+        document.getElementById('output').textContent = '';
+        output = '';
+        try {
+          for (pc = startAt || 0; pc < lines.length; pc++) {
+            execLine(lines[pc]);
+          }
+        } catch(e) {
+          if (e !== 'PAUSE_FOR_INPUT') throw e;
+        }
+        document.getElementById('output').textContent = output || '(no output)';
       }
 
-      document.getElementById('output').textContent = output || '(no output)';
+      // Input prompt handling for "Ask for"
+      function showPromptInput() {
+        let input = document.getElementById('promptInput');
+        input.style.display = 'block';
+        input.value = '';
+        input.focus();
+        input.onkeydown = function(ev) {
+          if (ev.key === 'Enter') {
+            let val = input.value;
+            input.style.display = 'none';
+            if (inputCallback) inputCallback(val);
+          }
+        };
+      }
+
+      // Start interpreter
+      runInterpreter(0);
     }
     // Run initially
     runOrgena();
