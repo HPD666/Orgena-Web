@@ -4,230 +4,155 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Orgena AI Teacher Assistant (Offline)</title>
+<title>Orgena AI Teacher</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0; padding: 0;
-    height: 200vh;
-    background: #f9f9f9;
-  }
-  #assistant {
-    position: fixed;
-    bottom: 20px; right: 20px;
-    width: 50px; height: 50px;
-    background: #2a5d84;
-    border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    cursor: pointer;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
-    font-size: 1.5rem;
-    user-select: none;
-  }
-  #assistant.open {
-    width: 360px;
-    height: 480px;
-    border-radius: 12px;
-    background: white;
-    flex-direction: column;
-    padding: 1rem;
-    color: #2a3b54;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-  }
-  #assistant.open h2 {
-    margin: 0 0 0.5rem 0;
-    color: #2a5d84;
-    font-size: 1.5rem;
-  }
-  #assistant.open p {
-    font-size: 0.9rem;
-    margin-top: 0;
-    color: #555;
-  }
-  #chatLog {
-    flex-grow: 1;
-    overflow-y: auto;
-    border: 1px solid #c3d4f7;
-    background: #f1f7fd;
-    border-radius: 5px;
-    padding: 0.5rem;
-    font-size: 0.9rem;
-    margin: 0.5rem 0 0.75rem 0;
-  }
-  #chatLog div {
-    margin-bottom: 0.5rem;
-  }
-  #chatLog .user {
-    text-align: right;
-    font-weight: bold;
-    color: #1a1a1a;
-  }
-  #chatLog .bot {
-    text-align: left;
-    color: #2a3b54;
-  }
-  input[type="text"] {
-    width: 100%;
-    font-size: 1rem;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+  body { font-family: Arial, sans-serif; max-width: 700px; margin: 2rem auto; padding: 1rem; background: #f5f5f7; }
+  h1 { text-align: center; color: #333; }
+  textarea, input[type="text"] {
+    width: 100%; padding: 0.7rem; font-size: 1rem; margin-bottom: 1rem;
+    border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
   }
   button {
-    background-color: #2a5d84;
-    color: white;
-    padding: 0.7rem 1.2rem;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    border-radius: 5px;
-    margin-top: 0.5rem;
-    width: 100%;
+    background-color: #007bff; color: white; border: none; padding: 0.7rem 1.2rem;
+    border-radius: 4px; font-size: 1rem; cursor: pointer;
   }
-  button:hover {
-    background-color: #1f4561;
+  button:hover { background-color: #0056b3; }
+  #answer {
+    background: white; border: 1px solid #ddd; border-radius: 4px; padding: 1rem;
+    min-height: 100px; white-space: pre-wrap; font-family: monospace; color: #222;
   }
-  #closeBtn {
-    position: absolute;
-    top: 10px; right: 12px;
-    background: transparent;
-    border: none;
-    font-size: 1.3rem;
-    cursor: pointer;
-    color: #2a5d84;
-  }
+  .footer { text-align: center; margin-top: 2rem; color: #666; font-size: 0.9rem; }
 </style>
 </head>
 <body>
 
-<div id="assistant" title="Click to open Orgena AI Teacher Assistant">?</div>
+<h1>Orgena AI Teacher</h1>
+<input type="text" id="questionInput" placeholder="Ask me anything about Orgena coding..." autofocus />
+<button id="askBtn">Ask</button>
+
+<div id="answer" aria-live="polite"></div>
 
 <script>
-  const assistant = document.getElementById('assistant');
-  let open = false;
-
-  // Orgena knowledge base — expand with all Orgena coding commands and concepts
-  const orgenaKB = {
-    "orgena": "Orgena is a powerful organizational system designed to streamline workflows and manage projects efficiently.",
-    "orgena language": "Orgena uses its own scripting language called OrgLang for automating tasks and workflows.",
-    "orgena code": "Orgena code includes commands such as 'create_task', 'assign_user', 'set_deadline', 'track_progress', and 'generate_report'.",
-    "create_task": "The 'create_task' command creates a new task in Orgena. Syntax: create_task 'task name' [options]",
-    "assign_user": "The 'assign_user' command assigns a user to a task. Syntax: assign_user 'task id' 'user id'",
-    "set_deadline": "Use 'set_deadline' to set the due date of a task. Syntax: set_deadline 'task id' 'YYYY-MM-DD'",
-    "track_progress": "The 'track_progress' command tracks the progress of tasks and updates their status automatically.",
-    "generate_report": "Use 'generate_report' to create detailed project reports. Syntax: generate_report 'project id' [filters]",
-    "orglang": "OrgLang is Orgena's scripting language that supports variables, loops, conditionals, functions, and error handling.",
-    "variables": "Declare variables in OrgLang using: var variableName = value;",
-    "loops": "Loops in OrgLang follow this syntax: for (var i = 0; i < count; i++) { ... }",
-    "conditions": "Conditional statements use if/else syntax: if (condition) { ... } else { ... }",
-    "functions": "Define functions with: function functionName(params) { ... }",
-    "error handling": "OrgLang supports try/catch blocks for managing errors during script execution.",
-    "project": "A project in Orgena groups related tasks, users, and deadlines together.",
-    "task": "Tasks represent individual units of work inside a project.",
-    "user": "Users can be assigned tasks and have roles such as admin, editor, or viewer.",
-    "automation": "Orgena supports automation scripts to simplify repetitive tasks and workflows.",
-    "integration": "Orgena can integrate with external services and APIs to extend functionality.",
-    "syntax": "OrgLang syntax is similar to JavaScript but optimized for task and project management.",
-    "example code": `Example Orgena code:
-create_task "Write user manual"
-assign_user "task001" "user123"
-set_deadline "task001" "2025-07-01"
-track_progress "task001"
-generate_report "project789" status:completed`
+(() => {
+  // Knowledge base with keys and answers
+  const knowledgeBase = {
+    "create element": "To create an HTML element, use:\nCreate Element <tag> as <name>\nExample:\nCreate Element button as myButton",
+    "set text": "Set the text content of an element:\nSet text of <name> to <value>\nExample:\nSet text of myButton to Click me",
+    "add to page": "Add an element to the page:\nAdd <name> to page\nExample:\nAdd myButton to page",
+    "on click": "Handle click events:\nOn click of <name>, run\n  ...\nend\nExample:\nOn click of myButton, run\n  Say Hello\nend",
+    "variables": "Store values with:\nRemember <var> is <value>\nor\n<var> is <value>\nExample:\nRemember count is 10",
+    "if statement": "Conditional execution:\nIf <condition>, <action>\nor\nIf <condition>, <action> else <other action>\nExample:\nIf count > 5, Say Big else Say Small",
+    "loops": "Loops:\nRepeat while <condition>, ... end\nFor each <var> in <list>, ... end\nExample:\nRepeat while count > 0,\n  Say count\n  count is count - 1\nend",
+    "functions": "Define functions:\nDefine <name> with <params>, ... end\nCall with:\nCall <name> with <args>\nExample:\nDefine greet with name,\n  Say Hello, name\nend\nCall greet with Alice",
+    "lists": "List management:\nAdd <item> to <list>\nRemove <item> from <list>\nCount <list>\nClear <list>\nExample:\nAdd apple to fruits",
+    "say": "Output text:\nSay <expression>\nExample:\nSay Hello World",
+    "print": "Use 'Say <expression>' to print or output text in Orgena.\nExample:\nSay Hello",
+    "output": "Use 'Say <expression>' to output text.\nExample:\nSay 42",
+    "comments": "Write comments with // or # at the line start.\nExample:\n// This is a comment",
   };
 
-  // Helper to find best answer in Orgena KB
-  function findAnswer(question) {
-    question = question.toLowerCase();
+  // Synonyms map to help match user questions to knowledgeBase keys
+  const synonyms = {
+    "print": "print",
+    "say": "say",
+    "output": "output",
+    "write": "say",
+    "display": "say",
+    "show": "say",
+    "how to": "", // just filler, ignore
+    "what is": "",
+    "explain": "",
+    "tell me": "",
+    "define": "",
+    "create": "create element",
+    "element": "create element",
+    "add": "add to page",
+    "click": "on click",
+    "event": "on click",
+    "variable": "variables",
+    "if": "if statement",
+    "condition": "if statement",
+    "loop": "loops",
+    "repeat": "loops",
+    "function": "functions",
+    "list": "lists",
+    "comment": "comments",
+    "//": "comments",
+    "#": "comments",
+  };
 
-    // Try exact or partial keyword matches first
-    for (const key in orgenaKB) {
-      if (question.includes(key)) {
-        return orgenaKB[key];
-      }
-    }
-
-    // If question mentions coding Orgena generally
-    if (question.includes("how to") && question.includes("orgena")) {
-      return "To code in Orgena, use OrgLang scripting language designed for managing projects and tasks. You can create tasks, assign users, set deadlines, automate workflows, and generate reports. Ask me about specific commands or scripting concepts!";
-    }
-
-    if (question.includes("example") || question.includes("sample")) {
-      if (question.includes("orgena")) {
-        return orgenaKB["example code"];
-      }
-    }
-
-    if (!question.trim()) return "Please type a question about coding in Orgena.";
-
-    // Default fallback
-    return "Sorry, I don't have an answer for that question about Orgena coding yet. Try asking about specific commands or features!";
+  // Helper: sanitize and tokenize input question
+  function tokenize(str) {
+    return str.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
   }
 
-  // Expand assistant UI
-  function openAssistant() {
-    open = true;
-    assistant.classList.add('open');
-    assistant.innerHTML = `
-      <button id="closeBtn" title="Close assistant">&times;</button>
-      <h2>Orgena AI Teacher Assistant</h2>
-      <p>Ask me anything about coding in Orgena!</p>
-      <div id="chatLog" aria-live="polite" aria-atomic="true"></div>
-      <input type="text" id="questionInput" placeholder="Type your question here and press Enter" aria-label="Question input"/>
-      <button id="askBtn">Ask</button>
-    `;
+  // Find best matching key from knowledge base
+  function findBestMatch(question) {
+    const tokens = tokenize(question);
 
-    document.getElementById('closeBtn').onclick = () => {
-      open = false;
-      assistant.classList.remove('open');
-      assistant.textContent = "?";
-    };
+    // Map tokens to canonical keys via synonyms
+    const mappedKeys = tokens.map(t => synonyms[t] || t);
 
-    const askBtn = document.getElementById('askBtn');
-    const input = document.getElementById('questionInput');
-    const chatLog = document.getElementById('chatLog');
+    // Score each knowledgeBase key by counting matches
+    let bestKey = null;
+    let bestScore = 0;
 
-    function addMessage(text, fromUser = false) {
-      const msg = document.createElement('div');
-      msg.className = fromUser ? 'user' : 'bot';
-      msg.textContent = text;
-      chatLog.appendChild(msg);
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
-
-    function handleQuestion() {
-      const question = input.value.trim();
-      if (!question) return;
-      addMessage(question, true);
-      input.value = '';
-      setTimeout(() => {
-        const answer = findAnswer(question);
-        addMessage(answer, false);
-      }, 400);
-    }
-
-    askBtn.onclick = handleQuestion;
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        handleQuestion();
+    for (const key in knowledgeBase) {
+      const keyTokens = key.split(' ');
+      // count overlap with mappedKeys
+      let score = 0;
+      keyTokens.forEach(kt => {
+        if (mappedKeys.includes(kt)) score++;
+      });
+      if (score > bestScore) {
+        bestScore = score;
+        bestKey = key;
       }
-    });
+    }
 
-    input.focus();
+    // If no match with score > 0, fallback null
+    if (bestScore === 0) return null;
+
+    return bestKey;
   }
 
-  assistant.addEventListener('click', () => {
-    if (!open) openAssistant();
+  // Main ask function
+  function answerQuestion(question) {
+    if (!question.trim()) return "Please ask a question about Orgena coding.";
+
+    // Try to find best knowledge base match
+    const key = findBestMatch(question);
+    if (key && knowledgeBase[key]) {
+      return knowledgeBase[key];
+    }
+
+    // If not found, generic fallback
+    return "Sorry, I don't have an answer for that Orgena question yet. Try asking about creating elements, variables, loops, functions, or printing with 'Say'.";
+  }
+
+  // UI hookup
+  const input = document.getElementById('questionInput');
+  const btn = document.getElementById('askBtn');
+  const answerDiv = document.getElementById('answer');
+
+  btn.addEventListener('click', () => {
+    const q = input.value;
+    answerDiv.textContent = "Thinking...";
+    setTimeout(() => {
+      const ans = answerQuestion(q);
+      answerDiv.textContent = ans;
+    }, 200);
   });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      btn.click();
+    }
+  });
+})();
 </script>
+
+<div class="footer">Orgena AI Teacher — Ask anything about Orgena coding!</div>
 
 </body>
 </html>
