@@ -1,40 +1,130 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Orgena AI Teacher</title>
 <style>
-  body { font-family: Arial, sans-serif; max-width: 700px; margin: 2rem auto; padding: 1rem; background: #f5f5f7; }
-  h1 { text-align: center; color: #333; }
-  textarea, input[type="text"] {
-    width: 100%; padding: 0.7rem; font-size: 1rem; margin-bottom: 1rem;
-    border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: transparent;
   }
-  button {
-    background-color: #007bff; color: white; border: none; padding: 0.7rem 1.2rem;
-    border-radius: 4px; font-size: 1rem; cursor: pointer;
+  /* Floating ball */
+  #toggleBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #007bff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    cursor: pointer;
+    color: white;
+    font-size: 32px;
+    line-height: 56px;
+    text-align: center;
+    user-select: none;
+    transition: background-color 0.3s ease;
+    z-index: 10000;
   }
-  button:hover { background-color: #0056b3; }
+  #toggleBtn:hover {
+    background: #0056b3;
+  }
+  /* Chat widget container */
+  #chatWidget {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 320px;
+    max-height: 400px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10000;
+    font-size: 14px;
+    color: #222;
+  }
+  #chatHeader {
+    background: #007bff;
+    color: white;
+    padding: 10px 16px;
+    font-weight: bold;
+    user-select: none;
+  }
   #answer {
-    background: white; border: 1px solid #ddd; border-radius: 4px; padding: 1rem;
-    min-height: 100px; white-space: pre-wrap; font-family: monospace; color: #222;
+    flex: 1;
+    padding: 12px 16px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    background: #f9f9f9;
+    border-bottom: 1px solid #ddd;
   }
-  .footer { text-align: center; margin-top: 2rem; color: #666; font-size: 0.9rem; }
+  #inputContainer {
+    display: flex;
+    padding: 8px 12px;
+    background: #fff;
+  }
+  #questionInput {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline-offset: 2px;
+  }
+  #askBtn {
+    margin-left: 8px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+  #askBtn:hover {
+    background-color: #0056b3;
+  }
+  /* Scrollbar styling for answer */
+  #answer::-webkit-scrollbar {
+    width: 8px;
+  }
+  #answer::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+  }
+  #answer::-webkit-scrollbar-track {
+    background: transparent;
+  }
 </style>
 </head>
 <body>
 
-<h1>Orgena AI Teacher</h1>
-<input type="text" id="questionInput" placeholder="Ask me anything about Orgena coding..." autofocus />
-<button id="askBtn">Ask</button>
+<div id="toggleBtn" title="Open Orgena AI Teacher">?</div>
 
-<div id="answer" aria-live="polite"></div>
+<div id="chatWidget" role="region" aria-live="polite" aria-label="Orgena AI Teacher chat">
+  <div id="chatHeader">Orgena AI Teacher</div>
+  <div id="answer">Ask me anything about Orgena coding...</div>
+  <div id="inputContainer">
+    <input type="text" id="questionInput" aria-label="Ask a question about Orgena coding" autocomplete="off" />
+    <button id="askBtn" aria-label="Send question">Send</button>
+  </div>
+</div>
 
 <script>
 (() => {
-  // Knowledge base with keys and answers
+  const toggleBtn = document.getElementById('toggleBtn');
+  const chatWidget = document.getElementById('chatWidget');
+  const input = document.getElementById('questionInput');
+  const btn = document.getElementById('askBtn');
+  const answerDiv = document.getElementById('answer');
+
+  // Knowledge base
   const knowledgeBase = {
     "create element": "To create an HTML element, use:\nCreate Element <tag> as <name>\nExample:\nCreate Element button as myButton",
     "set text": "Set the text content of an element:\nSet text of <name> to <value>\nExample:\nSet text of myButton to Click me",
@@ -51,7 +141,6 @@
     "comments": "Write comments with // or # at the line start.\nExample:\n// This is a comment",
   };
 
-  // Synonyms map to help match user questions to knowledgeBase keys
   const synonyms = {
     "print": "print",
     "say": "say",
@@ -59,7 +148,7 @@
     "write": "say",
     "display": "say",
     "show": "say",
-    "how to": "", // just filler, ignore
+    "how to": "",
     "what is": "",
     "explain": "",
     "tell me": "",
@@ -81,25 +170,17 @@
     "#": "comments",
   };
 
-  // Helper: sanitize and tokenize input question
   function tokenize(str) {
     return str.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
   }
 
-  // Find best matching key from knowledge base
   function findBestMatch(question) {
     const tokens = tokenize(question);
-
-    // Map tokens to canonical keys via synonyms
     const mappedKeys = tokens.map(t => synonyms[t] || t);
-
-    // Score each knowledgeBase key by counting matches
     let bestKey = null;
     let bestScore = 0;
-
     for (const key in knowledgeBase) {
       const keyTokens = key.split(' ');
-      // count overlap with mappedKeys
       let score = 0;
       keyTokens.forEach(kt => {
         if (mappedKeys.includes(kt)) score++;
@@ -109,53 +190,65 @@
         bestKey = key;
       }
     }
-
-    // If no match with score > 0, fallback null
     if (bestScore === 0) return null;
-
     return bestKey;
   }
 
-  // Main ask function
   function answerQuestion(question) {
     if (!question.trim()) return "Please ask a question about Orgena coding.";
-
-    // Try to find best knowledge base match
     const key = findBestMatch(question);
     if (key && knowledgeBase[key]) {
       return knowledgeBase[key];
     }
-
-    // If not found, generic fallback
     return "Sorry, I don't have an answer for that Orgena question yet. Try asking about creating elements, variables, loops, functions, or printing with 'Say'.";
   }
 
-  // UI hookup
-  const input = document.getElementById('questionInput');
-  const btn = document.getElementById('askBtn');
-  const answerDiv = document.getElementById('answer');
+  toggleBtn.addEventListener('click', () => {
+    if (chatWidget.style.display === 'flex') {
+      chatWidget.style.display = 'none';
+      toggleBtn.textContent = '?';
+      toggleBtn.title = "Open Orgena AI Teacher";
+      input.value = '';
+      answerDiv.textContent = 'Ask me anything about Orgena coding...';
+    } else {
+      chatWidget.style.display = 'flex';
+      chatWidget.style.flexDirection = 'column';
+      toggleBtn.textContent = '×'; // close icon
+      toggleBtn.title = "Close Orgena AI Teacher";
+      input.focus();
+    }
+  });
 
   btn.addEventListener('click', () => {
-    const q = input.value;
+    const q = input.value.trim();
+    if (!q) return;
     answerDiv.textContent = "Thinking...";
+    btn.disabled = true;
+    input.disabled = true;
+
     setTimeout(() => {
       const ans = answerQuestion(q);
       answerDiv.textContent = ans;
+      btn.disabled = false;
+      input.disabled = false;
+      input.value = ''; // Clear input after sending
+      input.focus();
     }, 200);
   });
 
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       btn.click();
     }
   });
+
 })();
 </script>
 
-<div class="footer">Orgena AI Teacher — Ask anything about Orgena coding!</div>
-
 </body>
 </html>
+
 
 <html lang="en">
 <head>
