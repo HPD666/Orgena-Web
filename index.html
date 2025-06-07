@@ -222,12 +222,14 @@
   btn.addEventListener('click', () => {
     const q = input.value.trim();
     if (!q) return;
+    // Clear previous answer before new response
     answerDiv.textContent = "Thinking...";
     btn.disabled = true;
     input.disabled = true;
 
     setTimeout(() => {
       const ans = answerQuestion(q);
+      // Replace old answer with new one (no history)
       answerDiv.textContent = ans;
       btn.disabled = false;
       input.disabled = false;
@@ -248,6 +250,7 @@
 
 </body>
 </html>
+
 
 
 <html lang="en">
