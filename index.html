@@ -1,4 +1,132 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Organa Teacher Assistant</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    height: 200vh; /* just to show scrolling behind fixed panel */
+    background: #f9f9f9;
+  }
+  /* Fixed position assistant container */
+  #assistant {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    max-width: 90vw;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 1rem;
+    z-index: 1000;
+  }
+  #assistant h2 {
+    margin: 0 0 0.5rem 0;
+    color: #2a5d84;
+    font-size: 1.25rem;
+  }
+  #assistant p {
+    font-size: 0.9rem;
+    margin-top: 0;
+    color: #555;
+  }
+  #questionInput {
+    width: 100%;
+    font-size: 1rem;
+    padding: 0.5rem;
+    margin: 0.75rem 0 0.5rem 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+  button {
+    background-color: #2a5d84;
+    color: white;
+    padding: 0.7rem 1.2rem;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 5px;
+    width: 100%;
+  }
+  button:hover {
+    background-color: #1f4561;
+  }
+  #answer {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background-color: #f1f7fd;
+    border: 1px solid #c3d4f7;
+    border-radius: 5px;
+    min-height: 3.5rem;
+    font-size: 0.95rem;
+    color: #2a3b54;
+  }
+</style>
+</head>
+<body>
+
+<div id="assistant">
+  <h2>Organa Teacher Assistant</h2>
+  <p>Ask me about Organa or basic facts:</p>
+  <input type="text" id="questionInput" placeholder="Type your question here..." />
+  <button onclick="answerQuestion()">Ask</button>
+  <div id="answer"></div>
+</div>
+
+<script>
+  const organaKnowledge = {
+    "organa": "Organa is a powerful organizational system designed to streamline workflow and manage projects efficiently.",
+    "organa language": "Organa uses its own scripting language called OrgLang, designed for automation within Organa.",
+    "organa code": "Organa code includes commands like 'create_task', 'assign', and 'track_progress'.",
+    "organa commands": "Common Organa commands: create_task, assign_user, set_deadline, track_progress, generate_report.",
+    "organa features": "Key features of Organa include task management, automated reporting, user assignments, and progress tracking."
+  };
+
+  const basicFacts = {
+    "capital of france": "The capital of France is Paris.",
+    "who is albert einstein": "Albert Einstein was a theoretical physicist known for the theory of relativity.",
+    "what is photosynthesis": "Photosynthesis is the process by which plants convert sunlight into energy.",
+    "what is 2+2": "2 + 2 equals 4."
+  };
+
+  function answerQuestion() {
+    const question = document.getElementById('questionInput').value.toLowerCase().trim();
+    const answerDiv = document.getElementById('answer');
+
+    if (!question) {
+      answerDiv.textContent = "Please enter a question.";
+      return;
+    }
+
+    for (const key in organaKnowledge) {
+      if (question.includes(key)) {
+        answerDiv.textContent = organaKnowledge[key];
+        return;
+      }
+    }
+
+    for (const key in basicFacts) {
+      if (question.includes(key)) {
+        answerDiv.textContent = basicFacts[key];
+        return;
+      }
+    }
+
+    answerDiv.textContent = "Sorry, I don't have the answer to that question. Please ask something about Organa or basic facts.";
+  }
+</script>
+
+</body>
+</html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
