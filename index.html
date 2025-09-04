@@ -274,7 +274,57 @@
 </head>
 <body>
   <div class="container">
-    <h1>𝙊𝙧𝙜𝙚𝙣𝙖 𝙒𝙤𝙧𝙠𝙨𝙥𝙖𝙘𝙚</h1>
+    <h1>𝙊𝙧𝙜𝙚𝙣𝙖 𝙒𝙤𝙧𝙠𝙨𝙥𝙖𝙘𝙚</h1> <div>
+    <button onclick="downloadProject()">Download Project</button>
+    <button onclick="document.getElementById('fileInput').click()">Load Project</button>
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="loadProject(event)">
+  </div>
+
+  <script>
+    // Save/download project data
+    function downloadProject() {
+      const data = document.getElementById('projectData').value;
+
+      try {
+        // Validate if it's valid JSON
+        JSON.parse(data);
+
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'orgenaproject.json';
+        a.click();
+
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert('Invalid JSON. Please correct your project data.');
+      }
+    }
+
+    // Load project data from file
+    function loadProject(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const content = e.target.result;
+          const json = JSON.parse(content);
+          document.getElementById('projectData').value = JSON.stringify(json, null, 2);
+          alert('Project loaded successfully!');
+        } catch (err) {
+          alert('Invalid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
+
     <form onsubmit="runOrgena(); return false;">
       <b>𝘾𝙤𝙙𝙚:</b>
       <textarea id="code" spellcheck="false">
