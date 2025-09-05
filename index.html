@@ -527,7 +527,16 @@ end
           if (orgenaElements[name]) orgenaElements[name].style.cssText += ";" + css;
           return;
         }
+        // Set innerHTML of <name> to <html>
+        if (/^Set innerHTML of ([a-zA-Z_]\w*) to (.+)$/i.test(line)) {
+         let m = line.match(/^Set innerHTML of ([a-zA-Z_]\w*) to (.+)$/i);
+         let name = m[1], val = evalExpr(m[2]);
+         if (orgenaElements[name]) orgenaElements[name].innerHTML = val;
+         return;
+       }
 
+
+        
         // Add <name> to page
         if (/^Add ([a-zA-Z_]\w*) to page$/i.test(line)) {
           let m = line.match(/^Add ([a-zA-Z_]\w*) to page$/i);
