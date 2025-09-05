@@ -277,7 +277,48 @@
     <h1>𝙊𝙧𝙜𝙚𝙣𝙖 𝙒𝙤𝙧𝙠𝙨𝙥𝙖𝙘𝙚</h1> <div>
 
     <form onsubmit="runOrgena(); return false;">
-      <b>𝘾𝙤𝙙𝙚:</b>
+      <b>𝘾𝙤𝙙𝙚:</b> 
+     <html lang="en">
+      <body>
+        <!-- File input (hidden) for loading code -->
+  <input type="file" id="fileInput" accept=".txt,.js,.html,.css" style="display:none" onchange="loadCode(event)">
+
+  <!-- Buttons -->
+  <button onclick="document.getElementById('fileInput').click()">Load Code</button>
+  <button onclick="downloadCode()">Download Code</button>
+
+  <script>
+    // Load code from selected file
+    function loadCode(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        document.getElementById('code').value = e.target.result;
+      };
+      reader.readAsText(file);
+    }
+
+    // Download the contents of the textarea
+    function downloadCode() {
+      const code = document.getElementById("code").value;
+      const filename = "code.txt"; // You can let the user pick the extension too
+
+      const blob = new Blob([code], { type: "text/plain" });
+      const link = document.createElement("a");
+
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+
+      URL.revokeObjectURL(link.href); // Clean up
+    }
+  </script>
+
+</body>
+</html>
+
       <textarea id="code" list="true" spellcheck="false">
 // Try Orgena's new HTML features!
 Create Element button as myBtn
