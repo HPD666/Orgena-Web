@@ -315,6 +315,24 @@
 
       URL.revokeObjectURL(link.href); // Clean up
     }
+
+
+// Create the counter display
+let counterDisplay = document.createElement("div");
+counterDisplay.style.fontSize = "24px";
+counterDisplay.style.margin = "20px";
+counterDisplay.textContent = "Counter: 0";
+document.body.appendChild(counterDisplay);
+
+let counter = 0;
+
+// Function to update counter every second
+setInterval(() => {
+    counter++;
+    counterDisplay.textContent = `Counter: ${counter}`;
+}, 1000);
+
+    
   </script>
 
 </body>
