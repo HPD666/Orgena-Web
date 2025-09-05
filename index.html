@@ -492,23 +492,6 @@ end
         line = line.trim();
         if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
 
-        // On click of <name>, run ... end
-        if (/^On click of ([a-zA-Z_]\w*), run$/i.test(line)) {
-     let m = line.match(/^On click of ([a-zA-Z_]\w*), run$/i);
-     let name = m[1];
-     let { block, next } = runBlock(pc);
-        if (orgenaElements[name]) {
-    orgenaElements[name].onclick = function() {
-      try { execBlock(block); }
-      catch(e) { if (e !== 'PAUSE_FOR_INPUT') throw e; }
-      document.getElementById('output').textContent = output || '(no output)';
-    }
-  }
-  pc = next - 1;
-  return;
-}
-
-        
         // --- HTML Extension Start ---
 
         // Create Element <type> as <name>
@@ -553,6 +536,25 @@ end
           return;
         }
 
+          
+        // On click of <name>, run ... end
+        if (/^On click of ([a-zA-Z_]\w*), run$/i.test(line)) {
+     let m = line.match(/^On click of ([a-zA-Z_]\w*), run$/i);
+     let name = m[1];
+     let { block, next } = runBlock(pc);
+        if (orgenaElements[name]) {
+    orgenaElements[name].onclick = function() {
+      try { execBlock(block); }
+      catch(e) { if (e !== 'PAUSE_FOR_INPUT') throw e; }
+      document.getElementById('output').textContent = output || '(no output)';
+    }
+  }
+  pc = next - 1;
+  return;
+}
+
+        
+        
         // Remove <name> from page
         if (/^Remove ([a-zA-Z_]\w*) from page$/i.test(line)) {
           let m = line.match(/^Remove ([a-zA-Z_]\w*) from page$/i);
