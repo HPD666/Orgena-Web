@@ -464,7 +464,7 @@
 "wrap": "wrap element",
 "unwrap": "unwrap element",
 "insert before": "insert before",
-"insert after": "insert after",
+"insert after": "insert after"
 
 "create":"create element",
 "element":"create element",
@@ -610,22 +610,21 @@
     return "Sorry, I don't have an answer for that Orgena question yet. Try asking about creating elements, variables, loops, functions, or printing with 'Say'.";
   }
 
- toggleBtn.addEventListener('click', () => {
-  const isVisible = window.getComputedStyle(chatWidget).display !== 'none';
-  if (isVisible) {
-    chatWidget.style.display = 'none';
-    toggleBtn.textContent = '?';
-    toggleBtn.title = "Open Orgena AI Teacher";
-    input.value = '';
-    answerDiv.textContent = 'Ask me anything about Orgena coding...';
-  } else {
-    chatWidget.style.display = 'flex';
-    chatWidget.style.flexDirection = 'column';
-    toggleBtn.textContent = '×';
-    toggleBtn.title = "Close Orgena AI Teacher";
-    input.focus();
-  }
-});
+  toggleBtn.addEventListener('click', () => {
+    if (chatWidget.style.display === 'flex') {
+      chatWidget.style.display = 'none';
+      toggleBtn.textContent = '?';
+      toggleBtn.title = "Open Orgena AI Teacher";
+      input.value = '';
+      answerDiv.textContent = 'Ask me anything about Orgena coding...';
+    } else {
+      chatWidget.style.display = 'flex';
+      chatWidget.style.flexDirection = 'column';
+      toggleBtn.textContent = '×'; // close icon
+      toggleBtn.title = "Close Orgena AI Teacher";
+      input.focus();
+    }
+  });
 
   btn.addEventListener('click', () => {
     const q = input.value.trim();
