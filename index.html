@@ -505,6 +505,23 @@ end
         line = line.trim();
         if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
 
+
+
+
+        // --- Wait command ---
+else if (/^Wait (\d+)(?:\s*seconds?)?$/i.test(line)) {
+    let m = line.match(/^Wait (\d+)(?:\s*seconds?)?$/i);
+    let sec = parseInt(m[1]);
+    await new Promise(resolve => setTimeout(resolve, sec * 1000));
+    return;
+}
+else if (/^Wait (\d+)(?:\s*ms| milliseconds?)?$/i.test(line)) {
+    let m = line.match(/^Wait (\d+)(?:\s*ms| milliseconds?)?$/i);
+    let ms = parseInt(m[1]);
+    await new Promise(resolve => setTimeout(resolve, ms));
+    return;
+}
+
         // --- HTML Extension Start ---
 
         // Create Element <type> as <name>
