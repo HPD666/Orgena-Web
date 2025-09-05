@@ -500,60 +500,9 @@ end
         vars = oldVars;
       }
 
-      async function execLine(line) {
-    line = line.trim();
-    if (!line || line.startsWith('//') || line.startsWith('#')) return;
-
-    // --- HTML element creation & manipulation ---
-    if (/^Create Element ([a-zA-Z0-9]+) as ([a-zA-Z_]\w*)$/i.test(line)) {
-        let m = line.match(/^Create Element ([a-zA-Z0-9]+) as ([a-zA-Z_]\w*)$/i);
-        let tag = m[1], name = m[2];
-        let el = document.createElement(tag);
-        el.style.margin = "6px";
-        orgenaElements[name] = el;
-        return;
-    }
-
-    if (/^Set text of ([a-zA-Z_]\w*) to (.+)$/i.test(line)) {
-        let m = line.match(/^Set text of ([a-zA-Z_]\w*) to (.+)$/i);
-        let name = m[1], val = evalExpr(m[2]);
-        if (orgenaElements[name]) orgenaElements[name].textContent = val;
-        return;
-    }
-
-    // You can paste here other HTML commands (Add to page, style, classes, etc.)
-
-    // --- Say command ---
-    if (/^Say\s+(.+)/i.test(line)) {
-        let expr = line.match(/^Say\s+(.+)/i)[1];
-        output += evalExpr(expr) + '\n';
-    }
-
-    // --- Variables / Lists / Remember ---
-    else if (/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i.test(line)) {
-        let m = line.match(/^Remember\s+([a-zA-Z_]\w*)\s+is\s+(.+)/i);
-        vars[m[1]] = evalExpr(m[2]);
-    }
-
-    // --- Ask for input (async version) ---
-    else if (/^Ask for ([a-zA-Z_]\w*)$/i.test(line)) {
-        let m = line.match(/^Ask for ([a-zA-Z_]\w*)$/i);
-        awaitingInput = true;
-        inputVarName = m[1];
-
-        await new Promise(resolve => {
-            inputCallback = val => {
-                vars[inputVarName] = val;
-                awaitingInput = false;
-                resolve();
-            };
-            showPromptInput();
-        });
-    }
-
-    // --- Other Orgena commands (loops, functions, if statements, etc.) ---
-    // If you have nested blocks, make sure to call await execBlock(block) for them
-}
+      function execLine(line) {
+        line = line.trim();
+        if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
 
         // --- HTML Extension Start ---
 
