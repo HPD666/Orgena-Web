@@ -501,7 +501,7 @@ end
         vars = oldVars;
       }
 
-      function execLine(line) {
+async function execLine(line) {
         line = line.trim();
         if (line === '' || line.startsWith('//') || line.startsWith('#')) return;
 
