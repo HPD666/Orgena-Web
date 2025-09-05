@@ -580,30 +580,28 @@ end
       if (orgenaElements[name]) orgenaElements[name].classList.toggle(className); 
       return;
     }
-        
-        // On click of <name>, run ... end
-if (/^On click of ([a-zA-Z_]\w*), run$/i.test(line)) {
+        if (/^On click of ([a-zA-Z_]\w*), run$/i.test(line)) {
   let m = line.match(/^On click of ([a-zA-Z_]\w*), run$/i);
   let name = m[1];
   let { block, next } = runBlock(pc);
 
+  // Use addEventListener so multiple clicks don’t overwrite previous handlers
   if (orgenaElements[name]) {
-    orgenaElements[name].onclick = function() {
-      // Save old output
+    orgenaElements[name].addEventListener('click', () => {
       let oldOutput = output;
       output = '';
       try {
-        block.forEach(execLine); // Run block lines on click
+        block.forEach(execLine); // run block on click
       } catch(e) {
         if (e !== 'PAUSE_FOR_INPUT') throw e;
       }
-      // Show result
+      // Update output
       document.getElementById('output').textContent = output || '(no output)';
-      output = oldOutput; // restore previous output
-    };
+      output = oldOutput; 
+    });
   }
 
-  pc = next - 1; // advance interpreter past this block
+  pc = next - 1; // move interpreter past this block
   return;
 }
 
