@@ -576,23 +576,21 @@ if (/^On click of ([a-zA-Z_]\w*), run$/i.test(line)) {
   let { block, next } = runBlock(pc);
 
   if (orgenaElements[name]) {
-    // Assign a reliable click handler
-    orgenaElements[name].onclick = function() {
-      let oldOutput = output;   // save old output if needed
-      output = '';               // clear output for this run
+    orgenaElements[name].onclick = () => {
+      // Run the block independently
       try {
-        execBlock(block);       // run the Orgena block
+        execBlock(block);
       } catch(e) {
         if (e !== 'PAUSE_FOR_INPUT') throw e;
       }
+      // Update output
       document.getElementById('output').textContent = output || '(no output)';
-      output = oldOutput + '\n' + output; // preserve previous output if needed
     };
   }
-  pc = next - 1;
+
+  pc = next - 1; // skip the block in main execution
   return;
 }
-
 
         
         // Remove <name> from page
