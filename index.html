@@ -545,7 +545,31 @@ end
           return;
         }
 
-          
+        // Add class "<className>" to <name>
+        if (/^Add class "(.+)" to ([a-zA-Z_]\w*)$/i.test(line)) {
+          let m = line.match(/^Add class "(.+)" to ([a-zA-Z_]\w*)$/i);
+          let className = m[1], name = m[2];
+          if (orgenaElements[name]) orgenaElements[name].classList.add(className);
+          return;
+        }
+
+       // Remove class "<className>" from <name>
+       if (/^Remove class "(.+)" from ([a-zA-Z_]\w*)$/i.test(line)) {
+       let m = line.match(/^Remove class "(.+)" from ([a-zA-Z_]\w*)$/i);
+       let className = m[1], name = m[2];
+       if (orgenaElements[name]) orgenaElements[name].classList.remove(className);
+       return;
+     }
+
+      // Toggle class "<className>" on <name>
+      if (/^Toggle class "(.+)" on ([a-zA-Z_]\w*)$/i.test(line)) {
+      let m = line.match(/^Toggle class "(.+)" on ([a-zA-Z_]\w*)$/i);
+      let className = m[1], name = m[2];
+      if (orgenaElements[name]) orgenaElements[name].classList.toggle(className); 
+      return;
+    }
+
+        
         // On click of <name>, run ... end
         if (/^On click of ([a-zA-Z_]\w*), run$/i.test(line)) {
      let m = line.match(/^On click of ([a-zA-Z_]\w*), run$/i);
