@@ -445,19 +445,73 @@
   <meta charset="UTF-8">
   <title>Orgena Workspace</title>
   <style>
-    body { background: #aadce6; color: #eee; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
-    .container { max-width: 900px; margin: 40px auto; background: #c1e3cc; border-radius: 10px; box-shadow: 0 0 10px #ffffff; padding: 32px 36px; }
-    h1, h2 { color: #97c1ff; }
-    pre, textarea { background: #ffffff; color: #000000; border: none; border-radius: 4px; padding: 10px; font-size: 1em; }
-    textarea { width: 100%; min-height: 420px; font-family: 'Fira Mono', 'Consolas', monospace; margin-bottom: 1em; font-size: 1.08em; }
-    button { background: #3c8dde; color: #fff; border: none; border-radius: 5px; padding: 10px 24px; font-size: 1.1em; cursor: pointer; margin-bottom: 20px; }
-    button:hover { background: #2767a6; }
-    #output { background: #ffffff; color: #9afc9a; border-radius: 4px; padding: 12px; min-height: 2em; white-space: pre-wrap; font-size: 1em; }
-    a { color: #7ea6ff; }
-    hr { border: none; border-bottom: 1px solid #74e8e8; margin: 32px 0; }
-    #promptInput { display: none; }
-    #orgenaElements { margin-top: 24px; }
-  </style>
+  body { 
+    background: #f0f4f8; /* light modern blue-gray */ 
+    color: #333333;       /* dark text for readability */ 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+  }
+  .container { 
+    max-width: 900px; 
+    margin: 40px auto; 
+    background: #ffffff; /* modern light container */ 
+    border-radius: 10px; 
+    box-shadow: 0 0 10px #d1d5db; /* subtle shadow */ 
+    padding: 32px 36px; 
+  }
+  h1, h2 { 
+    color: #4a90e2; /* soft modern blue */ 
+  }
+  pre, textarea { 
+    background: #f9f9f9; /* light code background */ 
+    color: #1e1e1e;       /* dark code text */ 
+    border: none; 
+    border-radius: 4px; 
+    padding: 10px; 
+    font-size: 1em; 
+  }
+  textarea { 
+    width: 100%; 
+    min-height: 420px; 
+    font-family: 'Fira Mono', 'Consolas', monospace; 
+    margin-bottom: 1em; 
+    font-size: 1.08em; 
+  }
+  button { 
+    background: #4a90e2; /* modern blue */ 
+    color: #ffffff; 
+    border: none; 
+    border-radius: 5px; 
+    padding: 10px 24px; 
+    font-size: 1.1em; 
+    cursor: pointer; 
+    margin-bottom: 20px; 
+  }
+  button:hover { 
+    background: #357ABD; /* darker blue on hover */ 
+  }
+  #output { 
+    background: #f9f9f9; 
+    color: #1e1e1e; 
+    border-radius: 4px; 
+    padding: 12px; 
+    min-height: 2em; 
+    white-space: pre-wrap; 
+    font-size: 1em; 
+  }
+  a { 
+    color: #4a90e2; /* link color */ 
+  }
+  hr { 
+    border: none; 
+    border-bottom: 1px solid #d1e7f0; /* subtle modern line */ 
+    margin: 32px 0; 
+  }
+  #promptInput { display: none; }
+  #orgenaElements { margin-top: 24px; }
+</style>
+
 </head>
 <body>
   <div class="container">
