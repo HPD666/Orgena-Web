@@ -1154,6 +1154,42 @@ document.addEventListener('dblclick', function(e) {
   e.preventDefault();
 }, { passive: false });
 </script>
+<script>
+const textarea = document.getElementById('code');
+const highlight = document.getElementById('highlight');
+
+// Orgena keywords
+const keywords = [
+  "Create Element","Set text","Add","On click","Say","Remember","If","Repeat","Define","Call","Show","Hide"
+];
+
+// Escape HTML
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;");
+}
+
+// Highlight function
+function updateHighlight() {
+  let text = escapeHtml(textarea.value);
+  keywords.forEach(k => {
+    const re = new RegExp(`\\b${k}\\b`, 'g');
+    text = text.replace(re, `<span style="color: #d73a49; font-weight:bold;">${k}</span>`);
+  });
+  highlight.innerHTML = text;
+}
+
+// Sync scroll
+textarea.addEventListener('input', updateHighlight);
+textarea.addEventListener('scroll', () => {
+  highlight.scrollTop = textarea.scrollTop;
+  highlight.scrollLeft = textarea.scrollLeft;
+});
+
+// Initialize
+updateHighlight();
+</script>
 
 
     
