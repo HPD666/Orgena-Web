@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <head>
+  <style>
+html, body {
+  touch-action: manipulation;    /* prevents double-tap zoom & most gestures */
+  overscroll-behavior: none;     /* prevents scrolling from double-tap */
+  margin: 0;
+  padding: 0;
+}
+</style>
+
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
   <meta charset="UTF-8">
@@ -1137,7 +1146,17 @@ else if (/^Wait (\d+)(?:\s*ms| milliseconds?)?$/i.test(line)) {
       runInterpreter(0);
     }
     runOrgena();
-  </script>
+  </script>  
+    
+<script>
+// extra safety for Safari / older iOS versions
+document.addEventListener('dblclick', function(e) {
+  e.preventDefault();
+}, { passive: false });
+</script>
+
+
+    
 </body>
 </html>
 </html>
