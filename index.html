@@ -619,7 +619,7 @@ textarea.addEventListener("input", updateCode);
       
     </script>
   <script>
-    function runOrgena() {
+   async function runOrgena() {
       counter = 0
       const code = document.getElementById('code').value;
       const lines = code.replace(/\r\n/g, '\n').split('\n');
@@ -634,6 +634,23 @@ textarea.addEventListener("input", updateCode);
       let eventBlocks = []; // For storing event handlers
 
       // Clear previous Orgena-created HTML
+
+// --- Wait command ---
+else if (/^Wait (\d+)(?:\s*seconds?)?$/i.test(line)) {
+    let m = line.match(/^Wait (\d+)(?:\s*seconds?)?$/i);
+    let sec = parseInt(m[1]);
+    await new Promise(resolve => setTimeout(resolve, sec * 1000));
+    return;
+}
+else if (/^Wait (\d+)(?:\s*ms| milliseconds?)?$/i.test(line)) {
+    let m = line.match(/^Wait (\d+)(?:\s*ms| milliseconds?)?$/i);
+    let ms = parseInt(m[1]);
+    await new Promise(resolve => setTimeout(resolve, ms));
+    return;
+}
+
+
+     
       document.getElementById('orgenaElements').innerHTML = '';
 
       function evalExpr(expr) {
