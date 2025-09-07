@@ -591,18 +591,19 @@ setInterval(() => {
 
 </body>
 </html>
-      <textarea id="code" list="true" spellcheck="false">
-// Try Orgena's new coding features!
-Create Element button as myBtn 
-        
-        Set style of myBtn to "background-color: red; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;"
-        
-Set text of myBtn to "Say Hello!"
-Add myBtn to page
-On click of myBtn, run
-  Say "Hello from Orgena!"
-end
-      </textarea><br>
+      <div style="position: relative; width: 100%;">
+  <pre id="highlight" 
+       style="position: absolute; top: 0; left: 0; width: 100%; height: 420px; 
+              pointer-events: none; padding: 10px; 
+              background: #f9f9f9; border-radius: 4px; 
+              overflow: auto; font-family: 'Fira Mono', monospace;"></pre>
+  <textarea id="code" spellcheck="false"
+            style="position: relative; width: 100%; min-height: 420px; 
+                   background: transparent; font-family: 'Fira Mono', monospace; 
+                   color: transparent; caret-color: black; 
+                   border-radius: 4px; padding: 10px; overflow: auto;"></textarea>
+</div>
+<br>
       <button type="submit">Run Orgena</button>
     </form>
     <input id="promptInput" type="text" placeholder="Type your answer and press Enter...">
