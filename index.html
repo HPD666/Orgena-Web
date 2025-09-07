@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+
+<script>if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js")
+    .then(() => console.log("Service Worker registered"))
+    .catch((err) => console.log("Service Worker failed:", err));
+}
+  </script>
+
 <head>
   <link rel="manifest" href="manifest.json">
   <meta charset="UTF-8">
