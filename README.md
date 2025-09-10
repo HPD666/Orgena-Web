@@ -6,7 +6,7 @@
 
 # What is Orgena?
 Orgena is a new coding language especially for beginners but higher level than block coding. 
-https://i.ibb.co/pBD7sRhB/IMG-0009.jpg![image](https://github.com/user-attachments/assets/57fa33e8-c9dd-4e21-b30c-cac76efb2caf)
+<img src="https://i.ibb.co/pBD7sRhB/IMG-0009.jpg">
 
 
 
